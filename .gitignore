@@ -2,4 +2,6 @@
 *.db
 *.txt
 *.log
-
+*.crt
+*.key
+*.pyc

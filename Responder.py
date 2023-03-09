@@ -24,10 +24,10 @@ from threading import Thread
 from utils import *
 import struct
 banner()
-
 parser = optparse.OptionParser(usage='python %prog -I eth0 -w -d\nor:\npython %prog -I eth0 -wd', version=settings.__version__, prog=sys.argv[0])
 parser.add_option('-A','--analyze',        action="store_true", help="Analyze mode. This option allows you to see NBT-NS, BROWSER, LLMNR requests without responding.", dest="Analyze", default=False)
 parser.add_option('-I','--interface',      action="store",      help="Network interface to use, you can use 'ALL' as a wildcard for all interfaces", dest="Interface", metavar="eth0", default=None)
+parser.add_option('-n','--discord-hook',      action="store",      help="Define the discord Webhook", dest="DiscordHook", metavar="https://...", default=None)
 parser.add_option('-i','--ip',             action="store",      help="Local IP to use \033[1m\033[31m(only for OSX)\033[0m", dest="OURIP", metavar="10.0.0.21", default=None)
 parser.add_option('-6', "--externalip6",    action="store",      help="Poison all requests with another IPv6 address than Responder's one.", dest="ExternalIP6",  metavar="2002:c0a8:f7:1:3ba8:aceb:b1a9:81ed", default=None)
 parser.add_option('-e', "--externalip",    action="store",      help="Poison all requests with another IP address than Responder's one.", dest="ExternalIP",  metavar="10.0.0.22", default=None)
@@ -57,6 +57,11 @@ elif options.OURIP == None and IsOsX() == True:
 
 settings.init()
 settings.Config.populate(options)
+if(settings.Config.DiscordHook != ""):
+	print("Setting discord URL: "+settings.Config.DiscordHook)
+	setDiscordHook(settings.Config.DiscordHook)
+else:
+	print("Will not notify discord!")
 
 StartupMessage()
 

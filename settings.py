@@ -123,6 +123,7 @@ class Settings:
 		self.DHCP_On_Off        = options.DHCP_On_Off
 		self.Basic              = options.Basic
 		self.Interface          = options.Interface
+		self.DiscordHook          = options.DiscordHook
 		self.OURIP              = options.OURIP
 		self.Force_WPAD_Auth    = options.Force_WPAD_Auth
 		self.Upstream_Proxy     = options.Upstream_Proxy

